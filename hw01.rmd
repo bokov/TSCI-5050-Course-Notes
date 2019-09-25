@@ -1,0 +1,218 @@
+---
+title: "TSCI 5050 Fall 2019, Homework 01"
+author: "Alex F. Bokov"
+email: "bokov@uthscsa.edu"
+date: "September 24, 2019"
+output:
+  html_document:
+    smart: no
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,eval = FALSE)
+```
+
+## Introduction. 
+
+Please complete the following steps. Some of them only need to be done by
+specific people and in those cases their names are highlighted. Some of the
+items below are accompanied by questions to be answered within the comments of
+your `data_characterization.R` scripts. **There is nothing to hand in-- I will
+review your file on RStudio. Please let me know when you're ready for me to look
+at it any time before the next class on October 1st.** Likewise, let me know if
+you're stuck.
+
+You should test your work before you move on to the next question. But your
+script may give erors because it is not finished yet. One approach is to
+temporarily comment out the lines that cause errors and use report-compiling as
+a test. Another approach is to hit the `CTRL-SHIFT-HOME` 3-key combo or
+`⌘-SHIFT-HOME` on the Mac (I think, correct me if I'm wrong). This will
+highlight the script from the beginning to your current location in the script
+(make sure the highlighted region does not end in the middle of a line of code).
+Hit the `CTRL-ENTER` (or `⌘-ENTER`) 2-key combo to run just the highlighted part
+of the script. By the time you reach the end of this homework, hopefully the
+script will run from start to finish without errors.
+
+## 1. EVERYONE: add some packages you will need.
+
+Look for a line in your script that begins with `packages <- ` and change it to
+look like this...
+
+```{r packages}
+packages <- c('GGally','tableone','pander');
+```
+
+## 2. <span style="color:teal">Noel</span>: create your renaming table.
+
+_Not_ in your script but in your console, i.e. the bottom pane, do the following
+command.
+```{r varmap}
+.maptemp <- data.frame(origname=dct0$column,varname=dct0$column,dispname=dct0$column);
+write.csv(.maptemp,file='varmap.csv');
+```
+
+## 3. EVERYONE: review your renaming table
+
+The columns should be: 
+
+* `origname`: Matching __exactly__ the original names of the columns in your data. Do not
+   change anything in this column.
+* `varname`: For columns that you want to rename, put the new name here, otherwise leave them as they are. __Important: do not make any names with spaces or `-`. Use `_` or `.` instead__. 
+* `dispname`: The display name, for plots and tables. This one may have spaces and other punctuation. 
+
+As long as the above requirements are met, you can rename your variables in `varname` and `dispname` 
+to anything that makes sense to you, in any language you want, etc. 
+
+If all the variable names in `varmap.csv` are already acceptable to you, change one `varname` and one `dispname` anyway, for practice. __Reminder:__ if you need to edit `varmap.csv` you do that by downloading it from RStudio to your local computer: click on the checkbox next to it in the __Files__ tab on the lower right, click the __More__ menu, choose __Export__ and save it to your local computer. Open it in Excel, make your changes, save, click the __Upload__ button in the __Files__ tab and upload it back to RStudio, overwriting the original.
+
+## 4. <span style="color:teal">Noel</span>: include the `varmap.csv` table into your script.
+
+Find the lines in your code that say: 
+``` {r varmap_location}
+# characterization ----
+set.caption('Data Dictionary');
+``` 
+and change them to look like this:
+``` {r varmap_added}
+map0 <- autoread ('varmap.csv');
+
+# characterization ----
+set.caption('Data Dictionary');
+```
+
+## 5. <span style="color:purple">Christine</span>, <span style="color:darkorange">Jennifer</span>, <span style="color:teal">Noel</span>: add the code that renames your variables
+After `map0 <- autoread ('varmap.csv')` add the following lines:
+```{r colrename}
+dct0$column <- make.unique(unlist(submulti(dct0$column,map0,method = 'startsends')));
+names(dat00) <- dct0$column;
+```
+<span style="color:purple">Note to Christine: you're very close, but try
+comparing your version to the one above. If all else fails, replace your
+variable renaming code with a copy-paste of the above.</span>
+
+<span style="color:darkorange">Note to Jennifer: you have this, it's just commented out. I believe it's safe to
+remove the `#`s now.</span>
+
+## 6. <span style="color:teal">Noel</span>: set the random seed
+After the above lines, add this:
+```{r setseed}
+set.seed(project_seed);
+```
+
+## 7. EVERYONE: create a developmental subsample.
+After the line with `set.seed(project_seed)` add the following, including the
+commented out text with questions and then answer those questions in your script
+in the space provided. If you need more space, just insert more lines that start
+with `#' `. I encourage you to run bits of code to see what each does and to
+invoke help for the various commands, e.g. `?nrow`. Here's another tip: if you
+have an object named `FOO` you can type `class(FOO)` to find out what kind of
+object it is.
+```{r dat01}
+#' 
+#' * Q: What does the command `nrow()` do?
+#'     * A: 
+#'          
+#'          
+#' * Q: What does the command `sample()` do? What are its first and second
+#'      arguments for?
+#'     * A: 
+#'          
+#'          
+#' * Q: If `foo` were a data frame, what might the expression `foo[bar,baz]` do,
+#'      what are the roles of `bar` and `baz` in that expression, and what would
+#'      it mean if you left either of them out of the expression?
+#'     * A: 
+#'          
+#'          
+#' 
+dat01 <- dat00[sample(nrow(dat00), nrow(dat00)/2),];
+```
+
+`dat01` is a smaller dataset randomly sampled from `dat00`. You will use it to 
+develop your analysis while setting aside the rest of the data for prediction 
+and hypothesis testing, to avoid bias and overfitting. Unless otherwise 
+indicated, you will be using `dat01` for the rest of this script.
+
+## 8. EVERYONE: select variables to put into your `predictorvars` and
+`outcomevars` Each of them should have at least two variables that exist in your
+dataset. If your data has a Subject ID variable, don't use that one. Your
+variables are allowed to have missing values, but the fewer missing the better.
+At least one of your `predictorvars` should be a discrete variable with 2-4
+possible values besides `NA` (missing data). Your data dictionary will be
+helfpul in choosing such variables. If you are using the demo dataset, you need
+to choose ones different from the ones I chose.
+
+Long variable names are tricky-- it's very easy to get one character wrong and
+that's enough for it to stop matching your column names. Sometimes it's a 
+character that's hard to see, like a trailing space (never leave trailing 
+spaces inside quoted strings). So that's why we're using `map0` to rename your
+variables to shorter versions.
+
+## 9. EVERYONE: update the plot to use the subsample and your new variable names
+If you already have a place in your code that starts with `ggpairs` replace that 
+line with this:
+```{r ggpairs}
+ggpairs(dat01[,mainvars]);
+```
+Make sure that the above expression is active, not commented out.
+
+If everything in previous parts works but this part (#9) fails, chances are
+it's because you misspelled a variable when you were doing part #8 above. Or, 
+maybe you are using the original variable names instead of the re-named ones 
+resulting from part #5 above.
+
+Problems with mis-named variables may produce errors that begin with `Error:
+Can't find columns`.
+
+The easy way to work around that is comment out the `ggpairs` line again, run the
+rest of the report, and copy-paste the variable names you want from the data
+dictionary it will print out right into your `predictorvars` and `outcomevars`
+__remember to put quotes around each name, separate the quoted names with
+commas, and don't permit any trailing spaces inside the quotes__. Or if you have
+run `source(data_characterization.R)` lately, instead of compiling the report
+you could print out the column names right in your console with `dct0$column`
+and then copy them from the console to `predictorvars` and `outcomevars` in your
+script. Did I mention, __remember to put quotes around each name, separate the
+quoted names with commas, and don't permit any trailing spaces inside the
+quotes__? 
+
+Once you added the correct variable nameds to `predictorvars` and `outcomevars`
+you can remove the `#` from the `ggpairs` line and try compiling your report 
+again.
+
+## 10. EVERYONE: Create a cohort table.
+`CreateTableOne` creates a summary of your patients (or samples) of the sort 
+people like to put at the beginnings of their research papers, hence the name.
+
+```{r tableone}
+#' * Q: Which function 'owns' the argument `caption`? What value does that 
+#'      argument pass to that function?
+#'     * A: 
+#'          
+#'          
+#' * Q: Which function 'owns' the argument `printToggle`? What value does that 
+#'      argument pass to that function?
+#'     * A: 
+#'          
+#'          
+#' * Q: Which function 'owns' the argument `vars`? We can see that the value
+#'      this argument passes comes from the variable `mainvars`... so what is
+#'      the actual value that ends up getting passed to the function?
+#'     * A: 
+#'          
+#'          
+#' * Q: What is the _very first_ argument of `print()` in the expression below?
+#'      (copy-paste only that argument into your answer without including 
+#'      anything extra)
+#'     * A: 
+#'          
+#'          
+pander(print(CreateTableOne(vars = mainvars, data = dat01, includeNA = TRUE)
+             , printToggle=FALSE)
+       , caption='Cohort Characterization');
+```
+
+
+Good luck!
+
